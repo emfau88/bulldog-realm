@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulldog Fantasy - Premium Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; min-height: 100vh; padding: 20px; color: white; position: relative; }
+        
+        /* Animated Background */
+        .bg-scene { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: linear-gradient(135deg, #0f0f23 0%, #1e1b4b 50%, #0f0f23 100%); overflow: hidden; }
+        .particle { position: absolute; width: 4px; height: 4px; background: rgba(139, 92, 246, 0.6); border-radius: 50%; animation: float 15s infinite linear; box-shadow: 0 0 10px rgba(139, 92, 246, 0.8); }
+        @keyframes float { 0% { transform: translateY(100vh) translateX(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(-100vh) translateX(100px); opacity: 0; } }
+        
+        h1 { font-size: 1.8rem; text-align: center; margin-bottom: 8px; text-shadow: 0 4px 20px rgba(139, 92, 246, 0.5); position: relative; z-index: 1; }
+        .subtitle { text-align: center; color: rgba(255,255,255,0.7); margin-bottom: 25px; font-size: 0.9rem; position: relative; z-index: 1; }
+        
+        /* Character Select with Golden Frame */
+        .char-grid { display: grid; grid-template-columns: 1fr; gap: 25px; max-width: 400px; margin: 0 auto; position: relative; z-index: 1; }
+        .char-card-wrapper { position: relative; cursor: pointer; transition: all 0.3s; }
+        .char-card-wrapper:hover { transform: translateY(-10px) scale(1.02); }
+        .char-card-wrapper.selected { transform: translateY(-10px); }
+        
+        .golden-frame { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        .golden-frame img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(251, 191, 36, 0.4)); }
+        
+        .char-content { position: relative; z-index: 1; padding: 35px; text-align: center; }
+        .char-img { width: 140px; height: 140px; object-fit: contain; margin: 0 auto 10px; display: block; filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6)); animation: breathe 3s ease-in-out infinite; }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+        
+        .char-name { font-size: 1.4rem; font-weight: 900; margin-bottom: 3px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        .char-class { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+        .shadow .char-class { color: #DC2626; }
+        .cotton .char-class { color: #F472B6; }
+        .titan .char-class { color: #FBBF24; }
+        
+        .stats { display: flex; justify-content: center; gap: 8px; }
+        .stat { background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 10px; min-width: 50px; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-value { font-size: 1.1rem; font-weight: 900; }
+        .stat-label { font-size: 0.6rem; opacity: 0.7; text-transform: uppercase; }
+        
+        .select-btn { background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%); color: #1e1b4b; border: none; padding: 18px 50px; border-radius: 30px; font-size: 1.1rem; font-weight: 900; cursor: pointer; box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4), 0 0 0 6px rgba(251, 191, 36, 0.1); margin: 30px auto; display: block; opacity: 0.5; pointer-events: none; transition: all 0.3s; position: relative; z-index: 1; }
+        .select-btn.active { opacity: 1; pointer-events: all; }
+        .select-btn:hover { transform: translateY(-3px); box-shadow: 0 20px 50px rgba(251, 191, 36, 0.5), 0 0 0 6px rgba(251, 191, 36, 0.2); }
+        
+        /* Game Screen with Dungeon */
+        .game-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+        .game-screen.active { display: block; }
+        .dungeon-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; filter: brightness(0.7); }
+        
+        .game-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; position: relative; z-index: 1; }
+        .back-btn { background: rgba(0,0,0,0.5); border: 2px solid rgba(251, 191, 36, 0.5); color: #FBBF24; width: 45px; height: 45px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s; }
+        .back-btn:hover { background: rgba(251, 191, 36, 0.2); transform: scale(1.1); }
+        
+        .main-container { max-width: 450px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+        
+        /* Character Display with Frame */
+        .char-display-wrapper { position: relative; margin-bottom: 20px; }
+        .display-frame { position: absolute; top: -20px; left: -20px; right: -20px; bottom: -20px; z-index: 2; pointer-events: none; }
+        .display-frame img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8)); }
+        
+        .char-display { text-align: center; position: relative; padding: 40px; }
+        .main-char-img { width: 180px; height: 180px; object-fit: contain; filter: drop-shadow(0 25px 50px rgba(0,0,0,0.8)); animation: float 4s ease-in-out infinite; position: relative; z-index: 1; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        
+        .mood { position: absolute; top: 20px; right: 40px; font-size: 2.5rem; background: linear-gradient(135deg, #FBBF24, #D97706); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 20px rgba(251, 191, 36, 0.5); animation: moodFloat 3s ease-in-out infinite; z-index: 3; border: 3px solid rgba(255,255,255,0.3); }
+        @keyframes moodFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        
+        .char-info { text-align: center; margin-bottom: 20px; position: relative; z-index: 1; }
+        .char-info h2 { font-size: 1.8rem; margin-bottom: 5px; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+        .level-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #FBBF24, #D97706); color: #1e1b4b; padding: 8px 20px; border-radius: 25px; font-weight: 900; font-size: 0.9rem; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        
+        /* Glass Card for Stats */
+        .glass-card { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px); border-radius: 25px; padding: 25px; border: 1px solid rgba(251, 191, 36, 0.2); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        
+        .needs { display: flex; flex-direction: column; gap: 15px; }
+        .need { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .need-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 800; font-size: 0.9rem; }
+        .need-value { font-weight: 900; color: #FBBF24; background: rgba(0,0,0,0.5); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.3); }
+        .bar { background: rgba(0,0,0,0.5); height: 12px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .bar-fill { height: 100%; border-radius: 10px; transition: width 0.5s; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .hunger { background: linear-gradient(90deg, #f97316, #ef4444); }
+        .energy { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+        .happiness { background: linear-gradient(90deg, #f472b6, #ec4899); }
+        
+        .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .action-btn { background: linear-gradient(145deg, rgba(251,191,36,0.9), rgba(217,119,6,0.9)); border: none; border-radius: 20px; padding: 18px 10px; cursor: pointer; transition: all 0.3s; font-weight: 900; font-size: 0.85rem; color: #1e1b4b; box-shadow: 0 5px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.3); border: 2px solid rgba(251, 191, 36, 0.5); }
+        .action-btn:hover { transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 30px rgba(251, 191, 36, 0.4), inset 0 1px 0 rgba(255,255,255,0.3); }
+        .action-btn:active { transform: translateY(-2px); }
+        
+        .floating-text { position: absolute; font-weight: 900; font-size: 1.8rem; pointer-events: none; animation: floatUp 1.2s ease-out forwards; z-index: 100; left: 50%; top: 30%; transform: translateX(-50%); text-shadow: 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(251,191,36,0.5); }
+        @keyframes floatUp { 0% { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.5); } 20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.2); } 100% { opacity: 0; transform: translateX(-50%) translateY(-60px) scale(1); } }
+        
+        @media (min-width: 768px) { .char-grid { grid-template-columns: repeat(3, 1fr); max-width: 1000px; } h1 { font-size: 2.5rem; } }
+    </style>
+</head>
+<body>
+
+<!-- BACKGROUND PARTICLES -->
+<div class="bg-scene" id="bgScene"></div>
+
+<!-- SELECT SCREEN -->
+<div id="selectScreen">
+    <h1>🏰 Bulldog Fantasy</h1>
+    <p class="subtitle">Wähle deinen Champion</p>
+    
+    <div class="char-grid">
+        <!-- Shadow -->
+        <div class="char-card-wrapper shadow" onclick="selectChar('shadow')">
+            <div class="golden-frame">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png" alt="Frame">
+            </div>
+            <div class="char-content">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png" class="char-img" alt="Shadow">
+                <div class="char-name">Shadow</div>
+                <div class="char-class">Dunkler Ritter</div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value">8</div><div class="stat-label">ATK</div></div>
+                    <div class="stat"><div class="stat-value">6</div><div class="stat-label">DEF</div></div>
+                    <div class="stat"><div class="stat-value">7</div><div class="stat-label">HP</div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cotton -->
+        <div class="char-card-wrapper cotton" onclick="selectChar('cotton')">
+            <div class="golden-frame">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png" alt="Frame">
+            </div>
+            <div class="char-content">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_000000009d987243b587d5dbd361e786.png" class="char-img" alt="Cotton">
+                <div class="char-name">Cotton</div>
+                <div class="char-class">Wolken-Magier</div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value">5</div><div class="stat-label">ATK</div></div>
+                    <div class="stat"><div class="stat-value">4</div><div class="stat-label">DEF</div></div>
+                    <div class="stat"><div class="stat-value">6</div><div class="stat-label">HP</div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Titan -->
+        <div class="char-card-wrapper titan" onclick="selectChar('titan')">
+            <div class="golden-frame">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png" alt="Frame">
+            </div>
+            <div class="char-content">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a4f8720aa44b42bb5a050f4d.png" class="char-img" alt="Titan">
+                <div class="char-name">Titan</div>
+                <div class="char-class">Goldener Wächter</div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value">6</div><div class="stat-label">ATK</div></div>
+                    <div class="stat"><div class="stat-value">10</div><div class="stat-label">DEF</div></div>
+                    <div class="stat"><div class="stat-value">9</div><div class="stat-label">HP</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button class="select-btn" id="startBtn" onclick="startGame()">Abenteuer starten! ⚔️</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="game-screen" id="gameScreen">
+    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000b334720a9cdaafe101317355.png" class="dungeon-bg" alt="Dungeon">
+    
+    <div class="game-header">
+        <button class="back-btn" onclick="backToSelect()">←</button>
+        <h2 style="font-size: 1.3rem; text-shadow: 0 2px 10px rgba(0,0,0,0.8);">🏰 Dungeon</button>
+        <button class="back-btn" onclick="location.reload()">⚙️</button>
+    </div>
+    
+    <div class="main-container">
+        <div class="char-display-wrapper">
+            <div class="display-frame">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png" alt="Frame">
+            </div>
+            <div class="char-display" id="charContainer">
+                <img src="" class="main-char-img" id="mainCharImg" alt="Character">
+                <div class="mood" id="mood">😊</div>
+            </div>
+        </div>
+        
+        <div class="char-info">
+            <h2 id="charName">Name</h2>
+            <div class="level-badge">
+                <span>⚔️</span>
+                <span>Level <span id="level">1</span></span>
+                <span>•</span>
+                <span id="xpText">0/100 XP</span>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <div class="needs">
+                <div class="need">
+                    <div class="need-header"><span>🍖 Hunger</span><span class="need-value" id="hungerText">80%</span></div>
+                    <div class="bar"><div class="bar-fill hunger" id="hungerBar" style="width: 80%"></div></div>
+                </div>
+                <div class="need">
+                    <div class="need-header"><span>⚡ Energie</span><span class="need-value" id="energyText">100%</span></div>
+                    <div class="bar"><div class="bar-fill energy" id="energyBar" style="width: 100%"></div></div>
+                </div>
+                <div class="need">
+                    <div class="need-header"><span>🎭 Freude</span><span class="need-value" id="happyText">70%</span></div>
+                    <div class="bar"><div class="bar-fill happiness" id="happyBar" style="width: 70%"></div></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <button class="action-btn" onclick="performAction('feed')">🍖<br>Füttern</button>
+            <button class="action-btn" onclick="performAction('play')">🎾<br>Spielen</button>
+            <button class="action-btn" onclick="performAction('sleep')">😴<br>Schlafen</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const characters = {
+    shadow: { name: 'Shadow', class: 'Dunkler Ritter', image: 'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png' },
+    cotton: { name: 'Cotton', class: 'Wolken-Magier', image: 'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_000000009d987243b587d5dbd361e786.png' },
+    titan: { name: 'Titan', class: 'Goldener Wächter', image: 'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a4f8720aa44b42bb5a050f4d.png' }
+};
+
+let selectedChar = null;
+let gameState = { needs: { hunger: 80, energy: 100, happy: 70 }, level: 1, xp: 0, maxXp: 100 };
+
+// Create particles
+for(let i=0; i<15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 15 + 's';
+    p.style.animationDuration = (10 + Math.random() * 10) + 's';
+    document.getElementById('bgScene').appendChild(p);
+}
+
+function selectChar(char) {
+    selectedChar = char;
+    document.querySelectorAll('.char-card-wrapper').forEach(c => c.classList.remove('selected'));
+    document.querySelector('.' + char).classList.add('selected');
+    document.getElementById('startBtn').classList.add('active');
+}
+
+function startGame() {
+    if(!selectedChar) return;
+    const char = characters[selectedChar];
+    document.getElementById('selectScreen').style.display = 'none';
+    document.getElementById('gameScreen').classList.add('active');
+    document.getElementById('mainCharImg').src = char.image;
+    document.getElementById('charName').textContent = char.name;
+    updateUI();
+}
+
+function backToSelect() {
+    document.getElementById('gameScreen').classList.remove('active');
+    document.getElementById('selectScreen').style.display = 'block';
+}
+
+function updateUI() {
+    document.getElementById('hungerBar').style.width = gameState.needs.hunger + '%';
+    document.getElementById('hungerText').textContent = Math.round(gameState.needs.hunger) + '%';
+    document.getElementById('energyBar').style.width = gameState.needs.energy + '%';
+    document.getElementById('energyText').textContent = Math.round(gameState.needs.energy) + '%';
+    document.getElementById('happyBar').style.width = gameState.needs.happy + '%';
+    document.getElementById('happyText').textContent = Math.round(gameState.needs.happy) + '%';
+    
+    let mood = '😊';
+    if(gameState.needs.hunger < 30 || gameState.needs.energy < 20) mood = '😢';
+    else if(gameState.needs.happy > 80) mood = '🤩';
+    document.getElementById('mood').textContent = mood;
+}
+
+function showText(text, color) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.textContent = text;
+    el.style.color = color;
+    document.getElementById('charContainer').appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+}
+
+function addXp(amount) {
+    gameState.xp += amount;
+    if(gameState.xp >= gameState.maxXp) {
+        gameState.level++;
+        gameState.xp = 0;
+        gameState.maxXp = Math.floor(gameState.maxXp * 1.5);
+        showText('LEVEL UP! ⭐', '#FBBF24');
+    }
+    document.getElementById('level').textContent = gameState.level;
+    document.getElementById('xpText').textContent = gameState.xp + '/' + gameState.maxXp + ' XP';
+}
+
+function performAction(action) {
+    let text = '', color = '';
+    switch(action) {
+        case 'feed':
+            if(gameState.needs.hunger >= 100) { showText('Satt! 🍖', '#ef4444'); return; }
+            gameState.needs.hunger = Math.min(100, gameState.needs.hunger + 30);
+            gameState.needs.energy = Math.min(100, gameState.needs.energy + 5);
+            text = '+30 🍖'; color = '#f97316';
+            break;
+        case 'play':
+            if(gameState.needs.energy < 20) { showText('Zu müde! 😴', '#3b82f6'); return; }
+            gameState.needs.happy = Math.min(100, gameState.needs.happy + 25);
+            gameState.needs.energy -= 15;
+            gameState.needs.hunger -= 10;
+            text = '+25 🎭'; color = '#ec4899';
+            break;
+        case 'sleep':
+            gameState.needs.energy = Math.min(100, gameState.needs.energy + 50);
+            text = '+50 ⚡'; color = '#06b6d4';
+            break;
+    }
+    showText(text, color);
+    updateUI();
+    addXp(10);
+}
+
+setInterval(() => {
+    gameState.needs.hunger = Math.max(0, gameState.needs.hunger - 0.5);
+    gameState.needs.happy = Math.max(0, gameState.needs.happy - 0.3);
+    if(gameState.needs.energy > 20) gameState.needs.energy = Math.max(0, gameState.needs.energy - 0.2);
+    updateUI();
+}, 5000);
+</script>
+
+</body>
+</html>
