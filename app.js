@@ -19,7 +19,7 @@ const characters = {
     }
 };
 
-let gameData = {
+const defaultGameData = {
     selectedChar: null,
     charData: null,
     needs: { hunger: 80, energy: 100, happy: 70 },
@@ -30,6 +30,9 @@ let gameData = {
     gems: 5,
     equippedWeapon: { name: 'Stahlschwert', atk: 15 }
 };
+
+// Central state (hydrated from localStorage if available)
+let gameData = (window.BRState ? BRState.init(defaultGameData) : structuredClone(defaultGameData));
 
 // Particles
 for(let i=0; i<15; i++) {
@@ -46,6 +49,7 @@ function selectChar(char) {
     document.querySelectorAll('.char-card-wrapper').forEach(c => c.classList.remove('selected'));
     document.querySelector('.' + char).classList.add('selected');
     document.getElementById('startBtn').classList.add('active');
+    saveGame();
 }
 
 function startGame() {
@@ -61,9 +65,7 @@ function startGame() {
     document.getElementById('dgold').textContent = gameData.gold;
     document.getElementById('dgems').textContent = gameData.gems;
     
-    // Load save if exists
-    loadGame();
-    
+    // State already hydrated via BRState.init()
     showScreen('home');
     updateUI();
     startGameLoop();
@@ -217,6 +219,7 @@ function enterDungeon(level) {
     }
     gameData.needs.energy -= 30;
     updateUI();
+    saveGame();
     showText('⚔️ Kampf gestartet!', '#FBBF24');
     // Hier käme später der Kampf-Code
 }
@@ -228,30 +231,41 @@ function startGameLoop() {
         gameData.needs.happy = Math.max(0, gameData.needs.happy - 0.3);
         if(gameData.needs.energy > 20) gameData.needs.energy = Math.max(20, gameData.needs.energy - 0.2);
         updateUI();
+        saveGame();
     }, 5000);
 }
 
-// Speichern/Laden
+// Speichern/Laden (mobile-safe via state.js)
 function saveGame() {
-    localStorage.setItem('bulldogRealm_save', JSON.stringify(gameData));
-}
-
-function loadGame() {
-    const save = localStorage.getItem('bulldogRealm_save');
-    if(save) {
-        const data = JSON.parse(save);
-        if(data.selectedChar === gameData.selectedChar) {
-            // Nur Bedürfnisse und Stats laden, nicht Charakter
-            gameData.needs = data.needs || gameData.needs;
-            gameData.level = data.level || 1;
-            gameData.xp = data.xp || 0;
-            gameData.maxXp = data.maxXp || 100;
-            gameData.gold = data.gold || 100;
-            gameData.gems = data.gems || 5;
-            updateUI();
-        }
+    if (window.BRState) {
+        BRState.saveSoon(400); // debounced
+    } else {
+        // Fallback (should not happen if state.js is loaded)
+        try { localStorage.setItem('bulldogRealm_save_v2_fallback', JSON.stringify(gameData)); } catch (e) {}
     }
 }
 
-// Auto-save
-window.onbeforeunload = () => saveGame();
+function loadGame() {
+    // Kept for compatibility — hydration happens in BRState.init()
+    return;
+}
+
+    }
+}
+
+
+
+// AUTO_RESUME: if a save exists with selectedChar, resume directly to Home.
+document.addEventListener('DOMContentLoaded', () => {
+    if (gameData && gameData.selectedChar) {
+        // Mark selected in UI if available
+        const card = document.querySelector('.' + gameData.selectedChar);
+        if (card) {
+            document.querySelectorAll('.char-card-wrapper').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            const btn = document.getElementById('startBtn');
+            if (btn) btn.classList.add('active');
+        }
+        startGame();
+    }
+});
