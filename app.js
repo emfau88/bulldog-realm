@@ -1,6 +1,6 @@
-// ===============================
-// Bulldog Realm — app.js
-// ===============================
+// Bulldog Realm — app.js (compatible with current index.html)
+// NOTE: Inline onclick handlers in index.html expect these globals:
+// selectChar, startGame, showScreen, switchTab, performAction, enterDungeon, showWeaponInfo
 
 // -------------------------------
 // Initialisierung / State
@@ -17,10 +17,10 @@ const defaultGameData = {
 
 let gameData = (window.BRState ? BRState.init(defaultGameData) : structuredClone(defaultGameData));
 
-// Optional: Fallback-Metadaten (nur wenn DOM nicht genug Infos liefert)
+// Optional: Fallback-Metadaten (falls DOM-Parsing mal fehlschlägt)
 const CHAR_META = {
   shadow: { name: "Shadow", image: "shadow.png" },
-  cotton: { name: "Cotton", image: "fluffy.png" }, // dein aktuelles fluffy.png
+  cotton: { name: "Cotton", image: "fluffy.png" },
   titan:  { name: "Titan",  image: "titan.png" },
 };
 
@@ -36,39 +36,69 @@ function saveGame() {
 }
 
 // -------------------------------
-// Helpers: Character aus DOM ermitteln
+// DOM Helpers
 // -------------------------------
+function $(id) { return document.getElementById(id); }
+
 function getSelectedCharCard() {
   if (!gameData.selectedChar) return null;
   return document.querySelector("." + gameData.selectedChar);
 }
 
+// IMPORTANT: In the select cards there are 2 images: frame + character.
+// We must pick ONLY the character image.
 function resolveSelectedCharImageSrc() {
   const card = getSelectedCharCard();
-  // Versuche: direkt ein <img> in der Card nutzen (robust gegen Dateinamen/Ordner)
-  const imgEl = card ? card.querySelector("img") : null;
-  if (imgEl && imgEl.getAttribute("src")) return imgEl.getAttribute("src");
+  const imgEl =
+    card?.querySelector("img.char-img") ||
+    card?.querySelector(".char-content img") || // fallback (2nd best)
+    null;
 
-  // Fallback: bekannte Dateien im Root
+  const src = imgEl?.getAttribute("src")?.trim();
+  if (src) return src;
+
   const meta = CHAR_META[gameData.selectedChar];
   return meta ? meta.image : "";
 }
 
 function resolveSelectedCharName() {
   const card = getSelectedCharCard();
-  // Versuche: Name-Element in der Card lesen
-  const nameEl =
-    card?.querySelector("[data-char-name]") ||
-    card?.querySelector(".char-name") ||
-    card?.querySelector("h2") ||
-    card?.querySelector("h3");
-
+  const nameEl = card?.querySelector(".char-name");
   const text = nameEl?.textContent?.trim();
   if (text) return text;
 
-  // Fallback
   const meta = CHAR_META[gameData.selectedChar];
   return meta ? meta.name : "";
+}
+
+// -------------------------------
+// Screen switching
+// -------------------------------
+// index.html uses both:
+// - showScreen('select')  (back buttons)
+// - switchTab('home')     (bottom nav)
+// Screens in DOM are: selectScreen, homeScreen, dungeonScreen, inventoryScreen, collectionScreen
+const SCREEN_MAP = {
+  select: "selectScreen",
+  home: "homeScreen",
+  dungeon: "dungeonScreen",
+  inventory: "inventoryScreen",
+  collection: "collectionScreen",
+};
+
+function showScreen(keyOrId) {
+  const id = SCREEN_MAP[keyOrId] || keyOrId; // accept 'home' OR 'homeScreen'
+
+  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
+  const el = $(id);
+  if (el) el.classList.add("active");
+
+  // refresh UI when landing on home
+  if (id === "homeScreen") renderHome();
+}
+
+function switchTab(tabKey) {
+  showScreen(tabKey);
 }
 
 // -------------------------------
@@ -85,58 +115,54 @@ function selectChar(char) {
   document.querySelectorAll(".char-card-wrapper").forEach((c) => c.classList.remove("selected"));
   document.querySelector("." + char)?.classList.add("selected");
 
-  const btn = document.getElementById("startBtn");
+  const btn = $("startBtn");
   if (btn) {
     btn.classList.add("active");
-    btn.disabled = false; // WICHTIG
+    btn.disabled = false;
   }
 
+  // Save immediately (mobile-safe)
   saveGame();
 }
 
 // -------------------------------
-// Spiel Start
+// Start game (Select -> Home)
 // -------------------------------
 function startGame() {
   if (!gameData.selectedChar) return;
-
-  document.getElementById("selectScreen")?.classList.remove("active");
-  document.getElementById("homeScreen")?.classList.add("active");
-
-  renderHome();
+  showScreen("home");
 }
 
 // -------------------------------
-// Home Screen
+// Home render (bars, gold, level, portrait)
+// IDs in index.html:
+// gold, level, homeHungerBar, homeEnergyBar, homeHappyBar, homeCharImg, homeCharName
 // -------------------------------
 function renderHome() {
-  // Ressourcen/Level
-  const goldEl = document.getElementById("goldValue");
-  if (goldEl) goldEl.innerText = gameData.gold;
+  const goldEl = $("gold");
+  if (goldEl) goldEl.textContent = String(gameData.gold);
 
-  const levelEl = document.getElementById("levelValue");
-  if (levelEl) levelEl.innerText = gameData.level;
+  const levelEl = $("level");
+  if (levelEl) levelEl.textContent = String(gameData.level);
 
-  // Bars
-  const hungerBar = document.getElementById("hungerBar");
-  if (hungerBar) hungerBar.style.width = gameData.hunger + "%";
+  const hungerBar = $("homeHungerBar");
+  if (hungerBar) hungerBar.style.width = `${gameData.hunger}%`;
 
-  const energyBar = document.getElementById("energyBar");
-  if (energyBar) energyBar.style.width = gameData.energy + "%";
+  const energyBar = $("homeEnergyBar");
+  if (energyBar) energyBar.style.width = `${gameData.energy}%`;
 
-  const joyBar = document.getElementById("joyBar");
-  if (joyBar) joyBar.style.width = gameData.joy + "%";
+  const happyBar = $("homeHappyBar");
+  if (happyBar) happyBar.style.width = `${gameData.joy}%`;
 
-  // --- FIX: gewählten Charakter auf Home anzeigen ---
-  // (IDs werden nur gesetzt, wenn sie existieren – bricht sonst nichts)
-  const homeImg = document.getElementById("homeCharImg");
+  // Portrait + name
+  const homeImg = $("homeCharImg");
   if (homeImg && gameData.selectedChar) {
     const src = resolveSelectedCharImageSrc();
     if (src) homeImg.src = src;
     homeImg.alt = resolveSelectedCharName() || "Character";
   }
 
-  const homeName = document.getElementById("homeCharName");
+  const homeName = $("homeCharName");
   if (homeName && gameData.selectedChar) {
     const nm = resolveSelectedCharName();
     if (nm) homeName.textContent = nm;
@@ -144,22 +170,32 @@ function renderHome() {
 }
 
 // -------------------------------
-// Aktionen
+// Actions (Tamagotchi buttons call performAction in index.html)
 // -------------------------------
+function performAction(type) {
+  // Map to internal names
+  doAction(type);
+}
+
 function doAction(type) {
   switch (type) {
     case "feed":
-      gameData.hunger = Math.min(100, gameData.hunger + 10);
+      gameData.hunger = Math.min(100, gameData.hunger + 12);
+      gameData.gold = Math.max(0, gameData.gold - 1);
       break;
     case "sleep":
-      gameData.energy = Math.min(100, gameData.energy + 10);
+      gameData.energy = Math.min(100, gameData.energy + 12);
       break;
     case "play":
-      gameData.joy = Math.min(100, gameData.joy + 10);
+      gameData.joy = Math.min(100, gameData.joy + 12);
+      gameData.gold = Math.max(0, gameData.gold - 1);
       break;
     case "train":
-      addXp(5);
+      addXp(6);
+      gameData.energy = Math.max(0, gameData.energy - 4);
       break;
+    default:
+      return;
   }
 
   if (window.BRState) {
@@ -171,46 +207,42 @@ function doAction(type) {
   saveGame();
 }
 
-// -------------------------------
-// XP / Level
-// -------------------------------
 function addXp(amount) {
   gameData.xp += amount;
-
-  if (gameData.xp >= gameData.level * 20) {
-    gameData.xp = 0;
-    gameData.level++;
+  const need = gameData.level * 20;
+  if (gameData.xp >= need) {
+    gameData.xp -= need;
+    gameData.level += 1;
+    gameData.gold += 5; // small reward
   }
+}
 
+// -------------------------------
+// Dungeon (index.html calls enterDungeon(1|2))
+// -------------------------------
+function enterDungeon(difficulty) {
+  // Minimal placeholder that proves click works; real dungeon later
+  const diff = Number(difficulty) || 1;
+  alert(`Dungeon (Schwierigkeit ${diff}) kommt als nächstes. ✅`);
+  // record last selection in state (optional)
   if (window.BRState) {
-    BRState.setState(gameData);
+    BRState.setState({ lastDungeon: diff });
     gameData = BRState.getState();
+  } else {
+    gameData.lastDungeon = diff;
   }
-
   saveGame();
 }
 
 // -------------------------------
-// Navigation
+// Weapon info modal placeholder (index.html calls showWeaponInfo())
 // -------------------------------
-function showScreen(id) {
-  document.querySelectorAll(".screen").forEach((s) => s.classList.remove("active"));
-  document.getElementById(id)?.classList.add("active");
-
-  // Wenn Home angezeigt wird: sicherstellen, dass Portrait/Name gesetzt sind
-  if (id === "homeScreen") renderHome();
+function showWeaponInfo() {
+  alert("Waffen/Equipment kommt als nächstes (Inventar + Ausrüsten).");
 }
 
 // -------------------------------
-// Dungeon MVP
-// -------------------------------
-function enterDungeon() {
-  alert("Dungeon kommt bald ");
-  saveGame();
-}
-
-// -------------------------------
-// Mobile Safe Autosave
+// Mobile-safe autosave hooks
 // -------------------------------
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "hidden") saveGame();
@@ -218,16 +250,20 @@ document.addEventListener("visibilitychange", () => {
 window.addEventListener("pagehide", saveGame);
 
 // -------------------------------
-// Auto Resume
+// Auto-resume (if selectedChar exists, enable Start and/or jump home)
 // -------------------------------
 window.addEventListener("load", () => {
+  // Sync gameData from BRState after init (already done), then update UI
   if (gameData.selectedChar) {
     document.querySelector("." + gameData.selectedChar)?.classList.add("selected");
-    const btn = document.getElementById("startBtn");
+    const btn = $("startBtn");
     if (btn) {
       btn.classList.add("active");
       btn.disabled = false;
     }
-    startGame();
+    // If a character was chosen before, resume directly to home
+    showScreen("home");
+  } else {
+    showScreen("select");
   }
 });
