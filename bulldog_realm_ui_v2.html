@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bulldog Realm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a14;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .screen {
+            display: none;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* Character Selection */
+        .char-header {
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(180deg, #1a1a3e 0%, #0a0a14 100%);
+        }
+        
+        .char-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .char-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 15px;
+            scroll-snap-type: x mandatory;
+        }
+        
+        .char-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .char-card {
+            flex: 0 0 85vw;
+            max-width: 340px;
+            background: linear-gradient(145deg, #1e1e3f, #151530);
+            border-radius: 20px;
+            padding: 20px;
+            scroll-snap-align: center;
+            border: 2px solid transparent;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .char-card.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 30px rgba(0,255,136,0.3);
+        }
+        
+        .char-frame {
+            width: 160px;
+            height: 200px;
+            margin: 0 auto 15px;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+        
+        .char-img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            margin-top: -5px;
+        }
+        
+        .char-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .char-desc {
+            font-size: 0.85rem;
+            color: #a0a0b0;
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .char-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+        
+        .stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .stat-label {
+            font-size: 0.6rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .select-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+        
+        /* Main Game UI */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .pet-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .pet-avatar {
+            width: 50px;
+            height: 62px;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pet-avatar img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        
+        .pet-text h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .pet-level {
+            font-size: 0.8rem;
+            color: #ffd700;
+            font-weight: 600;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-icon.active {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255,215,0,0.3);
+        }
+        
+        /* Game Area */
+        .game-area {
+            position: relative;
+            height: calc(100vh - 75px);
+                        background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+        
+        /* Screen Backgrounds (new UI v2) */
+        .home-bg { background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bghome.png'); }
+        .training-bg { background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bgtrain.png'); }
+        .dungeon-bg { background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bgdungeon.png'); }
+
+        .home-bg, .training-bg, .dungeon-bg {
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* HOME: minimal HUD */
+        .hud-top{
+            position:absolute;
+            top:14px;
+            left:12px;
+            right:12px;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            z-index:6;
+        }
+        .hud-pill{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            padding:10px 12px;
+            border-radius:18px;
+            background: rgba(0,0,0,0.72);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(6px);
+        }
+        .hud-ico{
+            width:22px;
+            height:22px;
+            object-fit:contain;
+            flex:0 0 auto;
+        }
+        .hud-bar{
+            flex:1;
+            height:10px;
+            border-radius:999px;
+            background: rgba(255,255,255,0.10);
+            overflow:hidden;
+        }
+        .hud-fill{
+            height:100%;
+            border-radius:999px;
+        }
+        .hud-fill-hp{ background: linear-gradient(90deg, #8b1d1d, #ff5252); }
+        .hud-fill-energy{ background: linear-gradient(90deg, #7a5b00, #ffcc33); }
+        .hud-txt{
+            width:54px;
+            text-align:right;
+            font-weight:700;
+            font-size:0.95rem;
+            opacity:0.95;
+        }
+
+        .action-panel.minimal{
+            padding: 14px 16px 18px;
+        }
+        .action-grid.three{
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .home-hint{
+            margin-top:10px;
+            font-size:0.85rem;
+            opacity:0.75;
+            text-align:center;
+        }
+
+        /* TRAINING */
+        .training-area{
+            position:relative;
+            min-height: calc(100vh - 75px);
+            display:flex;
+            flex-direction:column;
+            padding: 14px 14px 22px;
+            gap:12px;
+        }
+        .training-top{
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+        .pet-mini{
+            width:64px;
+            height:64px;
+            object-fit:contain;
+            filter: drop-shadow(0 10px 18px rgba(0,0,0,0.45));
+        }
+        .xp-section.compact{
+            background: rgba(0,0,0,0.65);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius:16px;
+            padding:10px 12px;
+            flex:1;
+            backdrop-filter: blur(6px);
+        }
+        .training-card{
+            background: rgba(0,0,0,0.62);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius:18px;
+            padding: 12px 12px;
+            backdrop-filter: blur(6px);
+        }
+        .stat-row{
+            display:grid;
+            grid-template-columns: 1fr auto auto;
+            align-items:center;
+            gap:10px;
+            padding:10px 6px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .stat-row:last-child{ border-bottom:none; }
+        .stat-left{ font-weight:800; opacity:0.95; }
+        .stat-mid{ font-weight:800; font-size:1.05rem; }
+        .train-btn{
+            background: rgba(255, 204, 51, 0.18);
+            border: 1px solid rgba(255, 204, 51, 0.35);
+            color: #ffd86a;
+            padding: 10px 12px;
+            border-radius: 14px;
+            font-weight: 900;
+            min-width: 58px;
+        }
+        .train-btn:disabled{
+            opacity:0.45;
+        }
+        .stat-row.locked{
+            opacity:0.55;
+        }
+        .stat-lock{
+            font-weight:900;
+            opacity:0.7;
+        }
+        .training-note .note-line{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding:6px 0;
+            font-size:0.95rem;
+        }
+        .training-note .subtle{ opacity:0.7; font-size:0.88rem; }
+        .note-ico{ width:18px; height:18px; object-fit:contain; }
+
+        /* DUNGEON PREVIEW */
+        .dungeon-preview{
+            position:relative;
+            min-height: calc(100vh - 75px);
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:flex-start;
+            padding: 10px 14px 20px;
+        }
+        .boss-preview{
+            width: min(360px, 92vw);
+            height:auto;
+            margin-top: 10px;
+            filter: drop-shadow(0 18px 28px rgba(0,0,0,0.65));
+        }
+        .dungeon-panel{
+            width: min(560px, 96vw);
+            margin-top: 10px;
+            background: rgba(0,0,0,0.64);
+            border: 1px solid rgba(255,80,80,0.28);
+            border-radius: 20px;
+            padding: 14px 14px 16px;
+            backdrop-filter: blur(6px);
+        }
+        .dungeon-title{
+            font-weight: 950;
+            letter-spacing: 0.5px;
+            font-size: 1.15rem;
+            color: #ff6b6b;
+        }
+        .dungeon-desc{
+            margin-top: 6px;
+            opacity: 0.80;
+            font-size: 0.95rem;
+            line-height: 1.25rem;
+        }
+        .dungeon-warnings{
+            margin-top: 12px;
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+        .warn-row{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight: 700;
+        }
+        .warn-ico{ width:18px; height:18px; object-fit:contain; }
+        .warn-emoji{ width:18px; text-align:center; }
+        .enter-btn{
+            margin-top: 14px;
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 85, 85, 0.18);
+            border: 1px solid rgba(255, 85, 85, 0.40);
+            color: #ffd0d0;
+            font-weight: 950;
+            letter-spacing: 1px;
+        }
+        .enter-btn:active{ transform: scale(0.98); }
+
+        /* Hide old overlay if still present */
+        .stats-overlay{ display:none; }
+}
+        
+        /* Stats Overlay */
+        .stats-overlay {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+        
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.85);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-pill-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .stat-pill-bar {
+            flex: 1;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-pill-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+        
+        .stat-pill-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .fill-hunger { background: linear-gradient(90deg, #ff4757, #ff6348); }
+        .fill-happy { background: linear-gradient(90deg, #ffa502, #ffc107); }
+        .fill-energy { background: linear-gradient(90deg, #3742fa, #2f3542); }
+        
+        .stat-pill-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 35px;
+            text-align: right;
+        }
+        
+        /* Pet Display */
+        .pet-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px 20px;
+        }
+        
+        .pet-img {
+            max-width: 220px;
+            max-height: 220px;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+            animation: idle 3s ease-in-out infinite;
+        }
+        
+        @keyframes idle {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+        
+        /* Action Panel */
+        .action-panel {
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 10%);
+            padding: 20px 15px 25px;
+        }
+        
+        .xp-section {
+            margin-bottom: 15px;
+        }
+        
+        .xp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .xp-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ed573, #7bed9f);
+            border-radius: 3px;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(46,213,115,0.5);
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: linear-gradient(145deg, #2d3436, #1e272e);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 12px 8px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.4;
+        }
+        
+        .action-icon {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        
+        .action-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #b0b0c0;
+        }
+        
+        .cooldown-tag {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff4757;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(255,71,87,0.5);
+        }
+        
+        /* Battle Screen */
+        .battle-header {
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.8);
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ff6b81;
+            letter-spacing: 2px;
+        }
+        
+        .battle-arena {
+            height: 45vh;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000b334720a9cdaafe101317355.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+        }
+        
+        .battle-arena::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+        }
+        
+        .fighter {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 42%;
+        }
+        
+        .fighter-img {
+            width: 100%;
+            max-width: 130px;
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .fighter-img.enemy {
+            border-color: #ff4757;
+        }
+        
+        .fighter-name {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .hp-box {
+            margin-top: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .hp-bar-bg {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .hp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ed573, #26de81);
+            border-radius: 5px;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(46,213,115,0.4);
+        }
+        
+        .hp-bar-fill.enemy {
+            background: linear-gradient(90deg, #ff4757, #ff6348);
+            box-shadow: 0 0 10px rgba(255,71,87,0.4);
+        }
+        
+        .hp-text {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #ffd700, #ffaa00);
+            color: #000;
+            font-weight: 900;
+            font-size: 1rem;
+            padding: 10px 18px;
+            border-radius: 25px;
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(255,215,0,0.5);
+        }
+        
+        /* Battle Controls */
+        .battle-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10,10,20,0.98);
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .battle-log {
+            height: 70px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .battle-log p {
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            animation: logIn 0.3s ease;
+        }
+        
+        @keyframes logIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .log-player { background: rgba(55,66,250,0.3); border-left: 3px solid #3742fa; }
+        .log-enemy { background: rgba(255,71,87,0.3); border-left: 3px solid #ff4757; }
+        .log-system { background: rgba(255,215,0,0.2); text-align: center; border: 1px solid rgba(255,215,0,0.3); }
+        
+        .battle-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .battle-btn {
+            background: linear-gradient(145deg, #ff4757, #c0392b);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 6px;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+            transition: all 0.2s;
+        }
+        
+        .battle-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Dungeon */
+        .dungeon-list {
+            padding: 15px;
+        }
+        
+        .dungeon-card {
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000b334720a9cdaafe101317355.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255,71,87,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .dungeon-inner {
+            background: rgba(0,0,0,0.75);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .dungeon-boss {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            border: 2px solid #ff4757;
+            box-shadow: 0 0 20px rgba(255,71,87,0.4);
+        }
+        
+        .dungeon-info h3 {
+            font-size: 1.2rem;
+            color: #ff6b81;
+            margin-bottom: 5px;
+        }
+        
+        .dungeon-info p {
+            font-size: 0.85rem;
+            color: #b0b0c0;
+            line-height: 1.4;
+        }
+        
+        /* Notifications */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0,0,0,0.95);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success { border-color: #2ed573; color: #2ed573; }
+        .toast.error { border-color: #ff4757; color: #ff6b81; }
+        .toast.info { border-color: #3742fa; color: #70a1ff; }
+        
+        /* Damage Popup */
+        .damage-popup {
+            position: absolute;
+            font-weight: 900;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: damageFloat 1s ease forwards;
+            text-shadow: 0 0 20px currentColor;
+            z-index: 100;
+        }
+        
+        @keyframes damageFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.3); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1); opacity: 0; }
+        }
+        
+        .pop-damage { color: #ff4757; }
+        .pop-heal { color: #2ed573; }
+        .pop-xp { color: #ffd700; }
+    </style>
+</head>
+<body>
+    <!-- Character Select -->
+    <div id="screen-select" class="screen active">
+        <div class="char-header">
+            <div class="char-title">🐕 WÄHLE DEINEN BULLDOG</div>
+        </div>
+        <div class="char-scroll">
+            <div class="char-card" onclick="selectChar('demon', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bosspre.png" class="char-img" alt="Shadow">
+                </div>
+                <div class="char-name">Shadow</div>
+                <div class="char-desc">Ein mächtiger Dämon aus der Unterwelt. Zerstört alles mit roher Kraft.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">5</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">10</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('demon')">AUSWÄHLEN</button>
+            </div>
+            
+            <div class="char-card" onclick="selectChar('angel', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/fluffy2.png" class="char-img" alt="Fluffi">
+                </div>
+                <div class="char-name">Fluffi</div>
+                <div class="char-desc">Ein himmlischer Engel. Blitzschnell und voller Liebe.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">8</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">7</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('angel')">AUSWÄHLEN</button>
+            </div>
+            
+            <div class="char-card" onclick="selectChar('knight', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/titan2.png" class="char-img" alt="Sir Barksalot">
+                </div>
+                <div class="char-name">Sir Barksalot</div>
+                <div class="char-desc">Ein edler Ritter. Unerschütterlich und stark wie eine Festung.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">10</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">7</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('knight')">AUSWÄHLEN</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Home -->
+    <div id="screen-home" class="screen">
+        <div class="game-header">
+            <div class="pet-info">
+                <div class="pet-avatar">
+                    <img src="" id="home-avatar" alt="Pet">
+                </div>
+                <div class="pet-text">
+                    <h2 id="home-name">Bulldog</h2>
+                    <div class="pet-level">LVL <span id="home-lvl">1</span></div>
+                </div>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon" onclick="showScreen('training')" title="Training">🏋️</div>
+                <div class="nav-icon" onclick="showScreen('dungeon')" title="Dungeon">☠️</div>
+            </div>
+        </div>
+
+        <div class="game-area home-bg">
+            <div class="hud-top">
+                <div class="hud-pill">
+                    <img class="hud-ico" src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/hp.png" alt="HP">
+                    <div class="hud-bar">
+                        <div class="hud-fill hud-fill-hp" id="home-well-fill" style="width:55%"></div>
+                    </div>
+                    <div class="hud-txt" id="home-well-text">55%</div>
+                </div>
+
+                <div class="hud-pill">
+                    <img class="hud-ico" src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/energy.png" alt="Energy">
+                    <div class="hud-bar">
+                        <div class="hud-fill hud-fill-energy" id="home-energy-fill" style="width:100%"></div>
+                    </div>
+                    <div class="hud-txt" id="home-energy-text">100%</div>
+                </div>
+            </div>
+
+            <div class="pet-display">
+                <img src="" class="pet-img" id="home-pet" alt="Pet">
+            </div>
+
+            <div class="action-panel minimal">
+                <div class="action-grid three">
+                    <button class="action-btn" id="btn-feed" onclick="action('feed')">
+                        <span class="action-icon">🍖</span>
+                        <span class="action-label">Füttern</span>
+                    </button>
+                    <button class="action-btn" id="btn-play" onclick="action('play')">
+                        <span class="action-icon">🎾</span>
+                        <span class="action-label">Spielen</span>
+                    </button>
+                    <button class="action-btn" id="btn-sleep" onclick="action('sleep')">
+                        <span class="action-icon">😴</span>
+                        <span class="action-label">Schlafen</span>
+                    </button>
+                </div>
+                <div class="home-hint">
+                    Training & Dungeons sind oben rechts.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    
+    <!-- Training -->
+    <div id="screen-training" class="screen">
+        <div class="game-header">
+            <div class="pet-info">
+                <div class="pet-avatar">
+                    <img src="" id="training-avatar" alt="Pet">
+                </div>
+                <div class="pet-text">
+                    <h2 id="training-name">Training</h2>
+                    <div class="pet-level">LVL <span id="training-lvl">1</span> • XP <span id="training-xp-pct">0</span>%</div>
+                </div>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon" onclick="showScreen('home')" title="Home">🏠</div>
+                <div class="nav-icon active" onclick="showScreen('training')" title="Training">🏋️</div>
+                <div class="nav-icon" onclick="showScreen('dungeon')" title="Dungeon">☠️</div>
+            </div>
+        </div>
+
+        <div class="training-area training-bg">
+            <div class="training-top">
+                <img src="" class="pet-mini" id="training-pet" alt="Pet">
+                <div class="xp-section compact">
+                    <div class="xp-label">
+                        <span>XP</span>
+                        <span id="training-xp-text">0 / 100</span>
+                    </div>
+                    <div class="xp-bar">
+                        <div class="xp-fill" id="training-xp-bar" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="training-card">
+                <div class="stat-row">
+                    <div class="stat-left">⚔️ ATK</div>
+                    <div class="stat-mid"><span id="stat-atk">10</span></div>
+                    <button class="train-btn" id="btn-train" onclick="action('train')">
+                        +1
+                    </button>
+                </div>
+                <div class="stat-row locked">
+                    <div class="stat-left">🛡️ DEF</div>
+                    <div class="stat-mid"><span id="stat-def">10</span></div>
+                    <div class="stat-lock">🔒</div>
+                </div>
+                <div class="stat-row locked">
+                    <div class="stat-left">💨 SPD</div>
+                    <div class="stat-mid"><span id="stat-spd">10</span></div>
+                    <div class="stat-lock">🔒</div>
+                </div>
+            </div>
+
+            <div class="training-card">
+                <div class="training-note">
+                    <div class="note-line"><img class="note-ico" src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/energy.png" alt=""> Kosten: <b>−25 Energie</b></div>
+                    <div class="note-line">Belohnung: <b>+25 XP</b></div>
+                    <div class="note-line subtle">Tipp: Hunger niedrig halten für Training.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Dungeon -->
+    <div 
+    <div id="screen-dungeon" class="screen">
+        <div class="game-header">
+            <div class="pet-info">
+                <div class="pet-avatar">
+                    <img src="" id="dungeon-avatar" alt="Pet">
+                </div>
+                <div class="pet-text">
+                    <h2>Höllenfestung</h2>
+                    <div class="pet-level">Boss-Preview • Entscheidung</div>
+                </div>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon" onclick="showScreen('home')" title="Home">🏠</div>
+                <div class="nav-icon" onclick="showScreen('training')" title="Training">🏋️</div>
+                <div class="nav-icon active" onclick="showScreen('dungeon')" title="Dungeon">☠️</div>
+            </div>
+        </div>
+
+        <div class="dungeon-preview dungeon-bg">
+            <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bosspre.png" class="boss-preview" alt="Boss">
+            <div class="dungeon-panel">
+                <div class="dungeon-title">🔥 Höllenfestung</div>
+                <div class="dungeon-desc">Betritt die Höllenfestung und stell dich dem Dämonen-Bulldog.</div>
+
+                <div class="dungeon-warnings">
+                    <div class="warn-row">
+                        <img class="warn-ico" src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/energy.png" alt="">
+                        <span>Energie −30</span>
+                    </div>
+                    <div class="warn-row">
+                        <span class="warn-emoji">☠️</span>
+                        <span>Hohe Niederlagegefahr!</span>
+                    </div>
+                    <div class="warn-row">
+                        <span class="warn-emoji">⭐</span>
+                        <span>Belohnung: 50+ XP</span>
+                    </div>
+                </div>
+
+                <button class="enter-btn" onclick="enterBattle()">BETRETEN</button>
+            </div>
+        </div>
+    </div>
+
+    
+    <!-- Battle -->
+    <div 
+    <div id="screen-battle" class="screen">
+        <div class="battle-header">⚔️ KAMPF ⚔️</div>
+        
+        <div class="battle-arena">
+            <div class="fighter">
+                <img src="" class="fighter-img" id="battle-player" alt="Du">
+                <div class="fighter-name">DU</div>
+                <div class="hp-box">
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" id="hp-player" style="width:100%"></div>
+                    </div>
+                    <div class="hp-text"><span id="hp-player-txt">100</span> HP</div>
+                </div>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <div class="fighter">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bosspre.png" class="fighter-img enemy" id="battle-enemy" alt="Boss">
+                <div class="fighter-name">BOSS</div>
+                <div class="hp-box">
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill enemy" id="hp-enemy" style="width:100%"></div>
+                    </div>
+                    <div class="hp-text"><span id="hp-enemy-txt">80</span> HP</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="battle-controls">
+            <div class="battle-log" id="battle-log">
+                <p class="log-system">⚔️ Der Kampf beginnt!</p>
+            </div>
+            <div class="battle-buttons">
+                <button class="battle-btn" onclick="battle('attack')">⚔️<br>ANGRIFF</button>
+                <button class="battle-btn" onclick="battle('defend')">🛡️<br>BLOCK</button>
+                <button class="battle-btn" onclick="battle('special')">✨<br>SPEZIAL</button>
+                <button class="battle-btn" onclick="flee()">🏃<br>FLUCHT</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const game = {
+            char: null,
+            pet: { name:'', lvl:1, xp:0, xpMax:100, hunger:20, happy:60, energy:100, maxHP:100,
+                   stats:{atk:10, def:10, spd:10} },
+            cds: {feed:0, play:0, sleep:0, train:0},
+            battle: {active:false, playerHP:100, enemyHP:80, turn:'player'}
+        };
+        
+        const chars = {
+            demon: { name:'Shadow', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bosspre.png', stats:{atk:15, def:5, spd:10} },
+            angel: { name:'Fluffi', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/fluffy2.png', stats:{atk:8, def:7, spd:15} },
+            knight: { name:'Sir Barksalot', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/titan2.png', stats:{atk:10, def:15, spd:7} }
+        };
+        
+        const CD = {feed:30, play:60, sleep:300, train:120};
+        
+        function selectChar(type, el) {
+            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        
+        function startGame(type) {
+            game.char = type;
+            const c = chars[type];
+            game.pet.name = c.name;
+            game.pet.stats = {...c.stats};
+            
+            document.getElementById('home-avatar').src = c.img;
+            document.getElementById('home-pet').src = c.img;
+            document.getElementById('dungeon-avatar').src = c.img;
+            const ta=document.getElementById('training-avatar'); if(ta) ta.src=c.img;
+            const tp=document.getElementById('training-pet'); if(tp) tp.src=c.img;
+            const tn=document.getElementById('training-name'); if(tn) tn.textContent=c.name + ' • Training';
+            document.getElementById('home-name').textContent = c.name;
+            
+            showScreen('home');
+            toast(`Willkommen, ${c.name}!`, 'success');
+            updateUI();
+            
+            setInterval(tickCD, 1000);
+            setInterval(decay, 10000);
+        }
+        
+        function showScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + name).classList.add('active');
+            
+            if(name === 'battle') {
+                game.battle.active = true;
+                game.battle.playerHP = game.pet.maxHP;
+                game.battle.enemyHP = 80;
+                game.battle.turn = 'player';
+                document.getElementById('battle-player').src = chars[game.char].img;
+                const be = document.getElementById('battle-enemy'); if(be) be.src = 'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/bosspre.png';
+                updateBattleUI();
+                log('⚔️ Kampf beginnt!', 'system');
+            }
+        }
+        
+        function action(type) {
+            if(game.cds[type] > 0) {
+                toast(`Warte ${game.cds[type]}s`, 'error');
+                return;
+            }
+            
+            let xp = 0, msg = '', changed = false;
+            
+            switch(type) {
+                case 'feed':
+                    if(game.pet.hunger <= 0) {
+                        toast('Nicht hungrig!', 'error');
+                        return;
+                    }
+                    game.pet.hunger = Math.max(0, game.pet.hunger - 30);
+                    game.pet.energy = Math.min(100, game.pet.energy + 5);
+                    xp = 10;
+                    msg = '🍖 Hunger -30';
+                    changed = true;
+                    break;
+                    
+                case 'play':
+                    if(game.pet.energy < 15) {
+                        toast('Zu müde!', 'error');
+                        return;
+                    }
+                    game.pet.happy = Math.min(100, game.pet.happy + 25);
+                    game.pet.energy -= 15;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 10);
+                    xp = 15;
+                    msg = '🎾 Glück +25';
+                    changed = true;
+                    break;
+                    
+                case 'sleep':
+                    game.pet.energy = 100;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 20);
+                    game.pet.happy = Math.max(0, game.pet.happy - 10);
+                    xp = 5;
+                    msg = '😴 Energie voll!';
+                    changed = true;
+                    break;
+                    
+                case 'train':
+                    if(game.pet.energy < 25 || game.pet.hunger > 80) {
+                        toast('Zu hungrig oder müde!', 'error');
+                        return;
+                    }
+                    game.pet.stats.atk++;
+                    game.pet.energy -= 25;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 15);
+                    xp = 25;
+                    msg = '💪 Angriff +1!';
+                    changed = true;
+                    break;
+            }
+            
+            if(changed) {
+                game.cds[type] = CD[type];
+                addXP(xp);
+                updateUI();
+                toast(msg, 'success');
+            }
+        }
+        
+        function addXP(amount) {
+            game.pet.xp += amount;
+            while(game.pet.xp >= game.pet.xpMax) {
+                game.pet.xp -= game.pet.xpMax;
+                game.pet.lvl++;
+                game.pet.xpMax = Math.floor(game.pet.xpMax * 1.2);
+                game.pet.maxHP += 20;
+                toast(`🎉 LEVEL ${game.pet.lvl}!`, 'success');
+            }
+        }
+        
+        function updateUI() {
+            // Header basics
+            const lvlPct = Math.floor((game.pet.xp / game.pet.xpMax) * 100);
+
+            const elHomeLvl = document.getElementById('home-lvl');
+            if(elHomeLvl) elHomeLvl.textContent = game.pet.lvl;
+
+            const elTrainLvl = document.getElementById('training-lvl');
+            if(elTrainLvl) elTrainLvl.textContent = game.pet.lvl;
+
+            const elTrainPct = document.getElementById('training-xp-pct');
+            if(elTrainPct) elTrainPct.textContent = lvlPct;
+
+            const elTrainXpText = document.getElementById('training-xp-text');
+            if(elTrainXpText) elTrainXpText.textContent = `${game.pet.xp} / ${game.pet.xpMax}`;
+
+            const elTrainXpBar = document.getElementById('training-xp-bar');
+            if(elTrainXpBar) elTrainXpBar.style.width = lvlPct + '%';
+
+            // HOME HUD: "Wohlbefinden" (derived) + Energy
+            const well = Math.max(0, Math.min(100, Math.round(((100 - game.pet.hunger) + game.pet.happy + game.pet.energy) / 3)));
+
+            const elWellFill = document.getElementById('home-well-fill');
+            if(elWellFill) elWellFill.style.width = well + '%';
+            const elWellTxt = document.getElementById('home-well-text');
+            if(elWellTxt) elWellTxt.textContent = well + '%';
+
+            const elEnFill = document.getElementById('home-energy-fill');
+            if(elEnFill) elEnFill.style.width = game.pet.energy + '%';
+            const elEnTxt = document.getElementById('home-energy-text');
+            if(elEnTxt) elEnTxt.textContent = game.pet.energy + '%';
+
+            // Training stats
+            const elAtk = document.getElementById('stat-atk');
+            if(elAtk) elAtk.textContent = game.pet.stats.atk;
+            const elDef = document.getElementById('stat-def');
+            if(elDef) elDef.textContent = game.pet.stats.def;
+            const elSpd = document.getElementById('stat-spd');
+            if(elSpd) elSpd.textContent = game.pet.stats.spd;
+
+            // Cooldowns + disabled state
+            ['feed','play','sleep','train'].forEach(act => {
+                const btn = document.getElementById('btn-' + act);
+                if(!btn) return;
+
+                const cd = game.cds[act];
+                btn.disabled = cd > 0;
+
+                let tag = btn.querySelector('.cooldown-tag');
+                if(cd > 0) {
+                    if(!tag) {
+                        tag = document.createElement('span');
+                        tag.className = 'cooldown-tag';
+                        btn.appendChild(tag);
+                    }
+                    tag.textContent = cd < 60 ? cd + 's' : Math.floor(cd/60) + 'm';
+                } else if(tag) {
+                    tag.remove();
+                }
+            });
+        }
+        
+        function tickCD() {
+            let changed = false;
+            for(let act in game.cds) {
+                if(game.cds[act] > 0) { game.cds[act]--; changed = true; }
+            }
+            if(changed) updateUI();
+        }
+        
+        function decay() {
+            game.pet.hunger = Math.min(100, game.pet.hunger + 5);
+            game.pet.happy = Math.max(0, game.pet.happy - 3);
+            game.pet.energy = Math.min(100, game.pet.energy + 2);
+            
+            if(game.pet.hunger >= 90) toast('⚠️ Dein Bulldog hat Hunger!', 'error');
+            if(game.pet.happy <= 10) toast('⚠️ Dein Bulldog ist traurig!', 'error');
+            
+            updateUI();
+        }
+        
+        function enterBattle() {
+            const COST = 30;
+            if(game.pet.energy < COST) {
+                toast('Zu müde für Kampf!', 'error');
+                return;
+            }
+            game.pet.energy -= COST;
+            updateUI();
+            toast('☠️ Dungeon betreten (Energie -30)', 'success');
+            showScreen('battle');
+        }
+        
+        function battle(move) {
+            if(!game.battle.active || game.battle.turn !== 'player') return;
+            
+            let dmg = 0;
+            if(move === 'attack') {
+                dmg = Math.floor(game.pet.stats.atk * (0.8 + Math.random()*0.4));
+                game.battle.enemyHP -= dmg;
+                log(`⚔️ Du verursachst ${dmg} Schaden!`, 'player');
+                showDmg(dmg, 'enemy');
+            } else if(move === 'special' && game.pet.energy >= 30) {
+                dmg = Math.floor(game.pet.stats.atk * 1.5);
+                game.battle.enemyHP -= dmg;
+                game.pet.energy -= 30;
+                log(`✨ Spezial! ${dmg} Schaden!`, 'player');
+                showDmg(dmg, 'enemy');
+            } else if(move === 'defend') {
+                log('🛡️ Du blockst!', 'player');
+            }
+            
+            updateBattleUI();
+            
+            if(game.battle.enemyHP <= 0) {
+                const xp = 50 + game.pet.lvl * 10;
+                addXP(xp);
+                toast(`SIEG! +${xp} XP`, 'success');
+                setTimeout(() => showScreen('home'), 2000);
+                return;
+            }
+            
+            game.battle.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+        }
+        
+        function enemyTurn() {
+            const dmg = Math.max(1, Math.floor(12 * (0.8 + Math.random()*0.4)) - Math.floor(game.pet.stats.def/5));
+            game.battle.playerHP -= dmg;
+            log(`👹 Boss macht ${dmg} Schaden!`, 'enemy');
+            showDmg(dmg, 'player');
+            updateBattleUI();
+            
+            if(game.battle.playerHP <= 0) {
+                toast('Niederlage...', 'error');
+                setTimeout(() => showScreen('home'), 2000);
+            } else {
+                game.battle.turn = 'player';
+            }
+        }
+        
+        function updateBattleUI() {
+            document.getElementById('hp-player').style.width = (game.battle.playerHP/game.pet.maxHP*100) + '%';
+            document.getElementById('hp-player-txt').textContent = game.battle.playerHP;
+            document.getElementById('hp-enemy').style.width = (game.battle.enemyHP/80*100) + '%';
+            document.getElementById('hp-enemy-txt').textContent = game.battle.enemyHP;
+        }
+        
+        function showDmg(amount, target) {
+            const popup = document.createElement('div');
+            popup.className = 'damage-popup pop-damage';
+            popup.textContent = '-' + amount;
+            popup.style.left = target === 'player' ? '25%' : '75%';
+            popup.style.top = '40%';
+            document.querySelector('.battle-arena').appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+        
+        function flee() {
+            game.battle.active = false;
+            showScreen('dungeon');
+        }
+        
+        function log(msg, type) {
+            const logEl = document.getElementById('battle-log');
+            const p = document.createElement('p');
+            p.className = 'log-' + type;
+            p.textContent = msg;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function toast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type;
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>
