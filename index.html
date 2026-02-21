@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bulldog Realm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a14;
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .screen {
+            display: none;
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        /* Character Selection */
+        .char-header {
+            padding: 15px;
+            text-align: center;
+            background: linear-gradient(180deg, #1a1a3e 0%, #0a0a14 100%);
+        }
+        
+        .char-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .char-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            padding: 15px;
+            scroll-snap-type: x mandatory;
+        }
+        
+        .char-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .char-card {
+            flex: 0 0 85vw;
+            max-width: 340px;
+            background: linear-gradient(145deg, #1e1e3f, #151530);
+            border-radius: 20px;
+            padding: 20px;
+            scroll-snap-align: center;
+            border: 2px solid transparent;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .char-card.selected {
+            border-color: #00ff88;
+            box-shadow: 0 0 30px rgba(0,255,136,0.3);
+        }
+        
+        .char-frame {
+            width: 160px;
+            height: 200px;
+            margin: 0 auto 15px;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+        }
+        
+        .char-img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            margin-top: -5px;
+        }
+        
+        .char-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .char-desc {
+            font-size: 0.85rem;
+            color: #a0a0b0;
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .char-stats {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.3);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-icon {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+        
+        .stat-val {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        
+        .stat-label {
+            font-size: 0.6rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .select-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+        }
+        
+        /* Main Game UI */
+        .game-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .pet-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .pet-avatar {
+            width: 50px;
+            height: 62px;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000a8b8720abd5966125bc21f74.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pet-avatar img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        
+        .pet-text h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .pet-level {
+            font-size: 0.8rem;
+            color: #ffd700;
+            font-weight: 600;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .nav-icon.active {
+            background: rgba(255,215,0,0.2);
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255,215,0,0.3);
+        }
+        
+        /* Game Area */
+        .game-area {
+            position: relative;
+            height: calc(100vh - 75px);
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_000000005cd4720a9ccc700c1b9db61b.png');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Stats Overlay */
+        .stats-overlay {
+            position: absolute;
+            top: 15px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 5;
+        }
+        
+        .stat-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,0,0,0.85);
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-pill-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+        
+        .stat-pill-bar {
+            flex: 1;
+            height: 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .stat-pill-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+        
+        .stat-pill-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.3), transparent);
+            border-radius: 6px 6px 0 0;
+        }
+        
+        .fill-hunger { background: linear-gradient(90deg, #ff4757, #ff6348); }
+        .fill-happy { background: linear-gradient(90deg, #ffa502, #ffc107); }
+        .fill-energy { background: linear-gradient(90deg, #3742fa, #2f3542); }
+        
+        .stat-pill-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            min-width: 35px;
+            text-align: right;
+        }
+        
+        /* Pet Display */
+        .pet-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 20px 20px;
+        }
+        
+        .pet-img {
+            max-width: 220px;
+            max-height: 220px;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+            animation: idle 3s ease-in-out infinite;
+        }
+        
+        @keyframes idle {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-8px) scale(1.02); }
+        }
+        
+        /* Action Panel */
+        .action-panel {
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 10%);
+            padding: 20px 15px 25px;
+        }
+        
+        .xp-section {
+            margin-bottom: 15px;
+        }
+        
+        .xp-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #888;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .xp-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ed573, #7bed9f);
+            border-radius: 3px;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(46,213,115,0.5);
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .action-btn {
+            background: linear-gradient(145deg, #2d3436, #1e272e);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 12px 8px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.4;
+        }
+        
+        .action-icon {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        
+        .action-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #b0b0c0;
+        }
+        
+        .cooldown-tag {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #ff4757;
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 3px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(255,71,87,0.5);
+        }
+        
+        /* Battle Screen */
+        .battle-header {
+            padding: 12px 15px;
+            background: rgba(0,0,0,0.8);
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #ff6b81;
+            letter-spacing: 2px;
+        }
+        
+        .battle-arena {
+            height: 45vh;
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000b334720a9cdaafe101317355.png');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+        }
+        
+        .battle-arena::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+        }
+        
+        .fighter {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            width: 42%;
+        }
+        
+        .fighter-img {
+            width: 100%;
+            max-width: 130px;
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.5);
+        }
+        
+        .fighter-img.enemy {
+            border-color: #ff4757;
+        }
+        
+        .fighter-name {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .hp-box {
+            margin-top: 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .hp-bar-bg {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .hp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ed573, #26de81);
+            border-radius: 5px;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(46,213,115,0.4);
+        }
+        
+        .hp-bar-fill.enemy {
+            background: linear-gradient(90deg, #ff4757, #ff6348);
+            box-shadow: 0 0 10px rgba(255,71,87,0.4);
+        }
+        
+        .hp-text {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        
+        .vs-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(145deg, #ffd700, #ffaa00);
+            color: #000;
+            font-weight: 900;
+            font-size: 1rem;
+            padding: 10px 18px;
+            border-radius: 25px;
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(255,215,0,0.5);
+        }
+        
+        /* Battle Controls */
+        .battle-controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10,10,20,0.98);
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .battle-log {
+            height: 70px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .battle-log p {
+            margin-bottom: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            animation: logIn 0.3s ease;
+        }
+        
+        @keyframes logIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .log-player { background: rgba(55,66,250,0.3); border-left: 3px solid #3742fa; }
+        .log-enemy { background: rgba(255,71,87,0.3); border-left: 3px solid #ff4757; }
+        .log-system { background: rgba(255,215,0,0.2); text-align: center; border: 1px solid rgba(255,215,0,0.3); }
+        
+        .battle-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .battle-btn {
+            background: linear-gradient(145deg, #ff4757, #c0392b);
+            border: none;
+            border-radius: 14px;
+            padding: 14px 6px;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255,71,87,0.3);
+            transition: all 0.2s;
+        }
+        
+        .battle-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Dungeon */
+        .dungeon-list {
+            padding: 15px;
+        }
+        
+        .dungeon-card {
+            background-image: url('https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_00000000b334720a9cdaafe101317355.png');
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255,71,87,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .dungeon-inner {
+            background: rgba(0,0,0,0.75);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .dungeon-boss {
+            width: 80px;
+            height: 80px;
+            border-radius: 15px;
+            border: 2px solid #ff4757;
+            box-shadow: 0 0 20px rgba(255,71,87,0.4);
+        }
+        
+        .dungeon-info h3 {
+            font-size: 1.2rem;
+            color: #ff6b81;
+            margin-bottom: 5px;
+        }
+        
+        .dungeon-info p {
+            font-size: 0.85rem;
+            color: #b0b0c0;
+            line-height: 1.4;
+        }
+        
+        /* Notifications */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: rgba(0,0,0,0.95);
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success { border-color: #2ed573; color: #2ed573; }
+        .toast.error { border-color: #ff4757; color: #ff6b81; }
+        .toast.info { border-color: #3742fa; color: #70a1ff; }
+        
+        /* Damage Popup */
+        .damage-popup {
+            position: absolute;
+            font-weight: 900;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: damageFloat 1s ease forwards;
+            text-shadow: 0 0 20px currentColor;
+            z-index: 100;
+        }
+        
+        @keyframes damageFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.3); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1); opacity: 0; }
+        }
+        
+        .pop-damage { color: #ff4757; }
+        .pop-heal { color: #2ed573; }
+        .pop-xp { color: #ffd700; }
+    </style>
+</head>
+<body>
+    <!-- Character Select -->
+    <div id="screen-select" class="screen active">
+        <div class="char-header">
+            <div class="char-title">🐕 WÄHLE DEINEN BULLDOG</div>
+        </div>
+        <div class="char-scroll">
+            <div class="char-card" onclick="selectChar('demon', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png" class="char-img" alt="Shadow">
+                </div>
+                <div class="char-name">Shadow</div>
+                <div class="char-desc">Ein mächtiger Dämon aus der Unterwelt. Zerstört alles mit roher Kraft.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">5</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">10</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('demon')">AUSWÄHLEN</button>
+            </div>
+            
+            <div class="char-card" onclick="selectChar('angel', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/fluffy2.png" class="char-img" alt="Fluffi">
+                </div>
+                <div class="char-name">Fluffi</div>
+                <div class="char-desc">Ein himmlischer Engel. Blitzschnell und voller Liebe.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">8</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">7</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('angel')">AUSWÄHLEN</button>
+            </div>
+            
+            <div class="char-card" onclick="selectChar('knight', this)">
+                <div class="char-frame">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/titan2.png" class="char-img" alt="Sir Barksalot">
+                </div>
+                <div class="char-name">Sir Barksalot</div>
+                <div class="char-desc">Ein edler Ritter. Unerschütterlich und stark wie eine Festung.</div>
+                <div class="char-stats">
+                    <div class="stat">
+                        <div class="stat-icon">⚔️</div>
+                        <div class="stat-val">10</div>
+                        <div class="stat-label">Angriff</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">🛡️</div>
+                        <div class="stat-val">15</div>
+                        <div class="stat-label">Def</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-val">7</div>
+                        <div class="stat-label">Tempo</div>
+                    </div>
+                </div>
+                <button class="select-btn" onclick="event.stopPropagation(); startGame('knight')">AUSWÄHLEN</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Home -->
+    <div id="screen-home" class="screen">
+        <div class="game-header">
+            <div class="pet-info">
+                <div class="pet-avatar">
+                    <img src="" id="home-avatar" alt="Pet">
+                </div>
+                <div class="pet-text">
+                    <h2 id="home-name">Bulldog</h2>
+                    <div class="pet-level">LVL <span id="home-lvl">1</span> • XP <span id="home-xp">0</span>%</div>
+                </div>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon active" onclick="showScreen('home')">🏠</div>
+                <div class="nav-icon" onclick="showScreen('dungeon')">⚔️</div>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="stats-overlay">
+                <div class="stat-pill">
+                    <span class="stat-pill-icon">🍖</span>
+                    <div class="stat-pill-bar">
+                        <div class="stat-pill-fill fill-hunger" id="bar-hunger" style="width:20%"></div>
+                    </div>
+                    <span class="stat-pill-text" id="txt-hunger">20%</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-pill-icon">😊</span>
+                    <div class="stat-pill-bar">
+                        <div class="stat-pill-fill fill-happy" id="bar-happy" style="width:60%"></div>
+                    </div>
+                    <span class="stat-pill-text" id="txt-happy">60%</span>
+                </div>
+                <div class="stat-pill">
+                    <span class="stat-pill-icon">⚡</span>
+                    <div class="stat-pill-bar">
+                        <div class="stat-pill-fill fill-energy" id="bar-energy" style="width:100%"></div>
+                    </div>
+                    <span class="stat-pill-text" id="txt-energy">100%</span>
+                </div>
+            </div>
+            
+            <div class="pet-display">
+                <img src="" class="pet-img" id="home-pet" alt="Pet">
+            </div>
+            
+            <div class="action-panel">
+                <div class="xp-section">
+                    <div class="xp-label">
+                        <span>Erfahrung</span>
+                        <span id="xp-text">0 / 100</span>
+                    </div>
+                    <div class="xp-bar">
+                        <div class="xp-fill" id="xp-bar" style="width:0%"></div>
+                    </div>
+                </div>
+                
+                <div class="action-grid">
+                    <button class="action-btn" id="btn-feed" onclick="action('feed')">
+                        <span class="action-icon">🍖</span>
+                        <span class="action-label">Füttern</span>
+                    </button>
+                    <button class="action-btn" id="btn-play" onclick="action('play')">
+                        <span class="action-icon">🎾</span>
+                        <span class="action-label">Spielen</span>
+                    </button>
+                    <button class="action-btn" id="btn-sleep" onclick="action('sleep')">
+                        <span class="action-icon">😴</span>
+                        <span class="action-label">Schlafen</span>
+                    </button>
+                    <button class="action-btn" id="btn-train" onclick="action('train')">
+                        <span class="action-icon">💪</span>
+                        <span class="action-label">Training</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Dungeon -->
+    <div id="screen-dungeon" class="screen">
+        <div class="game-header">
+            <div class="pet-info">
+                <div class="pet-avatar">
+                    <img src="" id="dungeon-avatar" alt="Pet">
+                </div>
+                <div class="pet-text">
+                    <h2>Dungeons</h2>
+                    <div class="pet-level">Wähle einen Kampf</div>
+                </div>
+            </div>
+            <div class="nav-icons">
+                <div class="nav-icon" onclick="showScreen('home')">🏠</div>
+                <div class="nav-icon active" onclick="showScreen('dungeon')">⚔️</div>
+            </div>
+        </div>
+        
+        <div class="dungeon-list">
+            <div class="dungeon-card" onclick="enterBattle()">
+                <div class="dungeon-inner">
+                    <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png" class="dungeon-boss" alt="Boss">
+                    <div class="dungeon-info">
+                        <h3>🔥 Höllenfestung</h3>
+                        <p>Dämonen-Pug wartet in den flammenden Tiefen...<br>⭐ Belohnung: 50+ XP</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Battle -->
+    <div id="screen-battle" class="screen">
+        <div class="battle-header">⚔️ KAMPF ⚔️</div>
+        
+        <div class="battle-arena">
+            <div class="fighter">
+                <img src="" class="fighter-img" id="battle-player" alt="Du">
+                <div class="fighter-name">DU</div>
+                <div class="hp-box">
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill" id="hp-player" style="width:100%"></div>
+                    </div>
+                    <div class="hp-text"><span id="hp-player-txt">100</span> HP</div>
+                </div>
+            </div>
+            
+            <div class="vs-badge">VS</div>
+            
+            <div class="fighter">
+                <img src="https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png" class="fighter-img enemy" alt="Boss">
+                <div class="fighter-name">BOSS</div>
+                <div class="hp-box">
+                    <div class="hp-bar-bg">
+                        <div class="hp-bar-fill enemy" id="hp-enemy" style="width:100%"></div>
+                    </div>
+                    <div class="hp-text"><span id="hp-enemy-txt">80</span> HP</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="battle-controls">
+            <div class="battle-log" id="battle-log">
+                <p class="log-system">⚔️ Der Kampf beginnt!</p>
+            </div>
+            <div class="battle-buttons">
+                <button class="battle-btn" onclick="battle('attack')">⚔️<br>ANGRIFF</button>
+                <button class="battle-btn" onclick="battle('defend')">🛡️<br>BLOCK</button>
+                <button class="battle-btn" onclick="battle('special')">✨<br>SPEZIAL</button>
+                <button class="battle-btn" onclick="flee()">🏃<br>FLUCHT</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const game = {
+            char: null,
+            pet: { name:'', lvl:1, xp:0, xpMax:100, hunger:20, happy:60, energy:100, maxHP:100,
+                   stats:{atk:10, def:10, spd:10} },
+            cds: {feed:0, play:0, sleep:0, train:0},
+            battle: {active:false, playerHP:100, enemyHP:80, turn:'player'}
+        };
+        
+        const chars = {
+            demon: { name:'Shadow', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/file_0000000009e47243a9b9c69184ce0322.png', stats:{atk:15, def:5, spd:10} },
+            angel: { name:'Fluffi', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/fluffy2.png', stats:{atk:8, def:7, spd:15} },
+            knight: { name:'Sir Barksalot', img:'https://raw.githubusercontent.com/emfau88/bulldog-realm/refs/heads/main/titan2.png', stats:{atk:10, def:15, spd:7} }
+        };
+        
+        const CD = {feed:30, play:60, sleep:300, train:120};
+        
+        function selectChar(type, el) {
+            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        
+        function startGame(type) {
+            game.char = type;
+            const c = chars[type];
+            game.pet.name = c.name;
+            game.pet.stats = {...c.stats};
+            
+            document.getElementById('home-avatar').src = c.img;
+            document.getElementById('home-pet').src = c.img;
+            document.getElementById('dungeon-avatar').src = c.img;
+            document.getElementById('home-name').textContent = c.name;
+            
+            showScreen('home');
+            toast(`Willkommen, ${c.name}!`, 'success');
+            updateUI();
+            
+            setInterval(tickCD, 1000);
+            setInterval(decay, 10000);
+        }
+        
+        function showScreen(name) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + name).classList.add('active');
+            
+            if(name === 'battle') {
+                game.battle.active = true;
+                game.battle.playerHP = game.pet.maxHP;
+                game.battle.enemyHP = 80;
+                game.battle.turn = 'player';
+                document.getElementById('battle-player').src = chars[game.char].img;
+                updateBattleUI();
+                log('⚔️ Kampf beginnt!', 'system');
+            }
+        }
+        
+        function action(type) {
+            if(game.cds[type] > 0) {
+                toast(`Warte ${game.cds[type]}s`, 'error');
+                return;
+            }
+            
+            let xp = 0, msg = '', changed = false;
+            
+            switch(type) {
+                case 'feed':
+                    if(game.pet.hunger <= 0) {
+                        toast('Nicht hungrig!', 'error');
+                        return;
+                    }
+                    game.pet.hunger = Math.max(0, game.pet.hunger - 30);
+                    game.pet.energy = Math.min(100, game.pet.energy + 5);
+                    xp = 10;
+                    msg = '🍖 Hunger -30';
+                    changed = true;
+                    break;
+                    
+                case 'play':
+                    if(game.pet.energy < 15) {
+                        toast('Zu müde!', 'error');
+                        return;
+                    }
+                    game.pet.happy = Math.min(100, game.pet.happy + 25);
+                    game.pet.energy -= 15;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 10);
+                    xp = 15;
+                    msg = '🎾 Glück +25';
+                    changed = true;
+                    break;
+                    
+                case 'sleep':
+                    game.pet.energy = 100;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 20);
+                    game.pet.happy = Math.max(0, game.pet.happy - 10);
+                    xp = 5;
+                    msg = '😴 Energie voll!';
+                    changed = true;
+                    break;
+                    
+                case 'train':
+                    if(game.pet.energy < 25 || game.pet.hunger > 80) {
+                        toast('Zu hungrig oder müde!', 'error');
+                        return;
+                    }
+                    game.pet.stats.atk++;
+                    game.pet.energy -= 25;
+                    game.pet.hunger = Math.min(100, game.pet.hunger + 15);
+                    xp = 25;
+                    msg = '💪 Angriff +1!';
+                    changed = true;
+                    break;
+            }
+            
+            if(changed) {
+                game.cds[type] = CD[type];
+                addXP(xp);
+                updateUI();
+                toast(msg, 'success');
+            }
+        }
+        
+        function addXP(amount) {
+            game.pet.xp += amount;
+            while(game.pet.xp >= game.pet.xpMax) {
+                game.pet.xp -= game.pet.xpMax;
+                game.pet.lvl++;
+                game.pet.xpMax = Math.floor(game.pet.xpMax * 1.2);
+                game.pet.maxHP += 20;
+                toast(`🎉 LEVEL ${game.pet.lvl}!`, 'success');
+            }
+        }
+        
+        function updateUI() {
+            document.getElementById('home-lvl').textContent = game.pet.lvl;
+            document.getElementById('home-xp').textContent = Math.floor((game.pet.xp/game.pet.xpMax)*100);
+            document.getElementById('xp-text').textContent = `${game.pet.xp} / ${game.pet.xpMax}`;
+            document.getElementById('xp-bar').style.width = (game.pet.xp/game.pet.xpMax*100) + '%';
+            
+            document.getElementById('bar-hunger').style.width = game.pet.hunger + '%';
+            document.getElementById('txt-hunger').textContent = game.pet.hunger + '%';
+            document.getElementById('bar-happy').style.width = game.pet.happy + '%';
+            document.getElementById('txt-happy').textContent = game.pet.happy + '%';
+            document.getElementById('bar-energy').style.width = game.pet.energy + '%';
+            document.getElementById('txt-energy').textContent = game.pet.energy + '%';
+            
+            ['feed','play','sleep','train'].forEach(act => {
+                const btn = document.getElementById('btn-' + act);
+                const cd = game.cds[act];
+                btn.disabled = cd > 0;
+                
+                let tag = btn.querySelector('.cooldown-tag');
+                if(cd > 0) {
+                    if(!tag) {
+                        tag = document.createElement('span');
+                        tag.className = 'cooldown-tag';
+                        btn.appendChild(tag);
+                    }
+                    tag.textContent = cd < 60 ? cd + 's' : Math.floor(cd/60) + 'm';
+                } else if(tag) {
+                    tag.remove();
+                }
+            });
+        }
+        
+        function tickCD() {
+            let changed = false;
+            for(let act in game.cds) {
+                if(game.cds[act] > 0) { game.cds[act]--; changed = true; }
+            }
+            if(changed) updateUI();
+        }
+        
+        function decay() {
+            game.pet.hunger = Math.min(100, game.pet.hunger + 5);
+            game.pet.happy = Math.max(0, game.pet.happy - 3);
+            game.pet.energy = Math.min(100, game.pet.energy + 2);
+            
+            if(game.pet.hunger >= 90) toast('⚠️ Dein Bulldog hat Hunger!', 'error');
+            if(game.pet.happy <= 10) toast('⚠️ Dein Bulldog ist traurig!', 'error');
+            
+            updateUI();
+        }
+        
+        function enterBattle() {
+            if(game.pet.energy < 30) {
+                toast('Zu müde für Kampf!', 'error');
+                return;
+            }
+            showScreen('battle');
+        }
+        
+        function battle(move) {
+            if(!game.battle.active || game.battle.turn !== 'player') return;
+            
+            let dmg = 0;
+            if(move === 'attack') {
+                dmg = Math.floor(game.pet.stats.atk * (0.8 + Math.random()*0.4));
+                game.battle.enemyHP -= dmg;
+                log(`⚔️ Du verursachst ${dmg} Schaden!`, 'player');
+                showDmg(dmg, 'enemy');
+            } else if(move === 'special' && game.pet.energy >= 30) {
+                dmg = Math.floor(game.pet.stats.atk * 1.5);
+                game.battle.enemyHP -= dmg;
+                game.pet.energy -= 30;
+                log(`✨ Spezial! ${dmg} Schaden!`, 'player');
+                showDmg(dmg, 'enemy');
+            } else if(move === 'defend') {
+                log('🛡️ Du blockst!', 'player');
+            }
+            
+            updateBattleUI();
+            
+            if(game.battle.enemyHP <= 0) {
+                const xp = 50 + game.pet.lvl * 10;
+                addXP(xp);
+                toast(`SIEG! +${xp} XP`, 'success');
+                setTimeout(() => showScreen('home'), 2000);
+                return;
+            }
+            
+            game.battle.turn = 'enemy';
+            setTimeout(enemyTurn, 1000);
+        }
+        
+        function enemyTurn() {
+            const dmg = Math.max(1, Math.floor(12 * (0.8 + Math.random()*0.4)) - Math.floor(game.pet.stats.def/5));
+            game.battle.playerHP -= dmg;
+            log(`👹 Boss macht ${dmg} Schaden!`, 'enemy');
+            showDmg(dmg, 'player');
+            updateBattleUI();
+            
+            if(game.battle.playerHP <= 0) {
+                toast('Niederlage...', 'error');
+                setTimeout(() => showScreen('home'), 2000);
+            } else {
+                game.battle.turn = 'player';
+            }
+        }
+        
+        function updateBattleUI() {
+            document.getElementById('hp-player').style.width = (game.battle.playerHP/game.pet.maxHP*100) + '%';
+            document.getElementById('hp-player-txt').textContent = game.battle.playerHP;
+            document.getElementById('hp-enemy').style.width = (game.battle.enemyHP/80*100) + '%';
+            document.getElementById('hp-enemy-txt').textContent = game.battle.enemyHP;
+        }
+        
+        function showDmg(amount, target) {
+            const popup = document.createElement('div');
+            popup.className = 'damage-popup pop-damage';
+            popup.textContent = '-' + amount;
+            popup.style.left = target === 'player' ? '25%' : '75%';
+            popup.style.top = '40%';
+            document.querySelector('.battle-arena').appendChild(popup);
+            setTimeout(() => popup.remove(), 1000);
+        }
+        
+        function flee() {
+            game.battle.active = false;
+            showScreen('dungeon');
+        }
+        
+        function log(msg, type) {
+            const logEl = document.getElementById('battle-log');
+            const p = document.createElement('p');
+            p.className = 'log-' + type;
+            p.textContent = msg;
+            logEl.appendChild(p);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function toast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast ' + type;
+            setTimeout(() => t.classList.add('show'), 10);
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+    </script>
+</body>
+</html>
